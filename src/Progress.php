@@ -68,9 +68,6 @@ class Progress
 
     public function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
     {
-        if ($this->totalCount === null) {
-            return null;
-        }
         $ete = $this->calculateEstimatedTimeEnroute();
         if (is_null($ete)) {
             return null;
