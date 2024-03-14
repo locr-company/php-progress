@@ -44,10 +44,10 @@ class Progress
         $secondsRemaining = ($this->ElapsedTime->s / $this->counter * ($this->totalCount - $this->counter));
         if ($secondsRemaining >= 60) {
             $minutesRemaining = (int)floor($secondsRemaining / 60);
-            $secondsRemaining %= 60;
+            $secondsRemaining = (int)$secondsRemaining % 60;
             if ($minutesRemaining >= 60) {
                 $hoursRemaining = (int)floor($minutesRemaining / 60);
-                $minutesRemaining %= 60;
+                $minutesRemaining = (int)$minutesRemaining % 60;
             }
         }
         $secondsRemaining = (int)$secondsRemaining;
