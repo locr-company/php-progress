@@ -20,11 +20,23 @@ class Progress
 
     private int $counter = 0;
     /**
-     * @var array<string, callable(Progress): void>
+     * @var array<string, callable(Progress $progress): void>
      */
     private array $events = [];
     private \DateTimeImmutable $startTime;
 
+    /**
+     * the constructor
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress(totalCount: 1_000);
+     * print $progress->TotalCount; // 1000
+     * ```
+     */
     public function __construct(private ?int $totalCount = null)
     {
         $this->startTime = new \DateTimeImmutable();
@@ -42,6 +54,20 @@ class Progress
         };
     }
 
+    /**
+     * Calculate the estimated time enroute
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress(totalCount: 1_000);
+     * $progress->setCounter(200);
+     * sleep(1);
+     * print $progress->calculateEstimatedTimeEnroute()->format('%H:%I:%S'); // 00:00:04
+     * ```
+     */
     public function calculateEstimatedTimeEnroute(): ?\DateInterval
     {
         if ($this->totalCount === null || $this->counter === 0) {
@@ -71,6 +97,22 @@ class Progress
         return new \DateInterval("PT{$hoursRemaining}H{$minutesRemaining}M{$secondsRemaining}S");
     }
 
+    /**
+     * Calculate the estimated time of arrival
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress(totalCount: 1_000);
+     * $progress->incrementCounter();
+     * sleep(1);
+     *
+     * $eta = $progress->calculateEstimatedTimeOfArrival();
+     * print $eta->format('Y-m-d H:i:s'); // 2021-10-10 20:00:01
+     * ```
+     */
     public function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
     {
         $ete = $this->calculateEstimatedTimeEnroute();
@@ -81,6 +123,19 @@ class Progress
         return (new \DateTimeImmutable())->add($ete);
     }
 
+    /**
+     * Increment the counter and trigger the change event if it is set
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress();
+     * $progress->incrementCounter();
+     * print $progress->Counter; // 1
+     * ```
+     */
     public function incrementCounter(): void
     {
         $this->counter++;
@@ -91,13 +146,41 @@ class Progress
     }
 
     /**
-     * @param callable(Progress): void $callback
+     * Register a callback for an event
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     * use Locr\Lib\ProgressEvent;
+     *
+     * $progress = new Progress();
+     * $progress->on(ProgressEvent::Change, function (Progress $progress) {
+     *    print $progress->Counter; // 1
+     * });
+     * $progress->incrementCounter();
+     * ```
+     *
+     * @param callable(Progress $progress): void $callback
      */
     public function on(ProgressEvent $event, callable $callback): void
     {
         $this->events[$event->value] = $callback;
     }
 
+    /**
+     * Set the counter and trigger the change event if it is set
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress();
+     * $progress->setCounter(10);
+     * print $progress->Counter; // 10
+     * ```
+     */
     public function setCounter(int $counter): void
     {
         if ($counter < 0) {
@@ -110,6 +193,21 @@ class Progress
         }
     }
 
+    /**
+     * Return a formatted string
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress(totalCount: 1_000);
+     * sleep(1);
+     * $progress->incrementCounter();
+     * // progress => 1/1000 (0.10%); elapsed: 00:00:01; ete: 00:16:39; eta: 2021-10-10 20:00:01
+     * print $progress->toFormattedString();
+     * ```
+     */
     public function toFormattedString(string $format = self::DEFAULT_TO_STRING_FORMAT): string
     {
         $replacements = [
