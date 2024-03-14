@@ -42,10 +42,10 @@ class Progress
         $hoursRemaining = 0;
         $minutesRemaining = 0;
         $secondsRemaining = (int)($this->ElapsedTime->s / $this->counter * ($this->totalCount - $this->counter));
-        if ($secondsRemaining > 60) {
+        if ($secondsRemaining >= 60) {
             $minutesRemaining = floor($secondsRemaining / 60);
             $secondsRemaining %= 60;
-            if ($minutesRemaining > 60) {
+            if ($minutesRemaining >= 60) {
                 $hoursRemaining = floor($minutesRemaining / 60);
                 $minutesRemaining %= 60;
             }
@@ -56,7 +56,7 @@ class Progress
 
     public function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
     {
-        if ($this->totalCount === null || $this->counter === 0) {
+        if ($this->totalCount === null) {
             return null;
         }
         $ete = $this->calculateEstimatedTimeEnroute();
