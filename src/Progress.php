@@ -15,7 +15,7 @@ class Progress
 {
     private int $counter = 0;
     /**
-     * @var array<string, callable>
+     * @var array<string, callable(Progress): void>
      */
     private array $events = [];
     private \DateTimeImmutable $startTime;
@@ -88,6 +88,9 @@ class Progress
         }
     }
 
+    /**
+     * @param callable(Progress): void $callback
+     */
     public function on(ProgressEvent $event, callable $callback): void
     {
         $this->events[$event->value] = $callback;
