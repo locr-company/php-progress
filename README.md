@@ -5,22 +5,29 @@
 ![github_tag](https://img.shields.io/github/v/tag/locr-company/php-progress)
 ![packagist](https://img.shields.io/packagist/v/locr-company/progress)
 
-# 1. How to use
+# 1. Installation
+
+```bash
+composer require locr-company/progress
+```
+
+# 2. How to use
 
 ```php
 <?php
 
 use Locr\Lib\Progress;
 
-$progress = new Progress(totalCount: 1000);
+$progress = new Progress(totalCount: 1_000);
 $progress->incrementCounter();
 print $progress->Counter; // 1
 print $progress->PercentageCompleted; // 0.1
+print $progress->toFormattedString(); // progress => 1/1000 (0.10%); elapsed: 00:00:01; ete: 00:16:39; eta: 2021-10-10 20:00:01
 $progress->setCounter(1000);
 print $progress->PercentageCompleted; // 100
 ```
 
-# 2. Development
+# 3. Development
 
 Clone the repository
 
