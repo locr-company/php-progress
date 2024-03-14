@@ -24,6 +24,8 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $progress->Counter);
         $this->assertNull($progress->TotalCount);
         $this->assertNull($progress->PercentageCompleted);
+        $this->assertNull($progress->EstimatedTimeOfArrival);
+        $this->assertNull($progress->EstimatedTimeEnroute);
     }
 
     public function testNewInstanceWithTotalCount(): void
@@ -61,5 +63,27 @@ final class ProgressTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Counter must be greater than or equal to 0');
         $progress->setCounter(-1);
+    }
+
+    public function testEstimatedTimeOfArrival(): void
+    {
+        $progress = new Progress(totalCount: 1_000);
+        $progress->incrementCounter();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $progress->EstimatedTimeOfArrival);
+        sleep(1);
+        $totalSeconds = $progress->EstimatedTimeOfArrival->getTimestamp() - $progress->StartTime->getTimestamp();
+        $this->assertGreaterThanOrEqual(900, $totalSeconds);
+        $this->assertLessThanOrEqual(1100, $totalSeconds);
+    }
+
+    public function testEstimatedTimeEnroute(): void
+    {
+        $progress = new Progress(totalCount: 1_000);
+        $progress->setCounter(200);
+        $this->assertInstanceOf(\DateInterval::class, $progress->EstimatedTimeEnroute);
+        sleep(1);
+        $remainingSeconds = $progress->EstimatedTimeEnroute->s;
+        $this->assertGreaterThanOrEqual(3, $remainingSeconds);
+        $this->assertLessThanOrEqual(5, $remainingSeconds);
     }
 }
