@@ -54,4 +54,12 @@ final class ProgressTest extends TestCase
         $this->assertEquals(500, $progress->Counter);
         $this->assertEquals(50, $progress->PercentageCompleted);
     }
+
+    public function testSetInvalidCounter(): void
+    {
+        $progress = new Progress();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Counter must be greater than or equal to 0');
+        $progress->setCounter(-1);
+    }
 }
