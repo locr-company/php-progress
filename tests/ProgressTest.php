@@ -173,4 +173,29 @@ final class ProgressTest extends TestCase
 
         $progress->setCounter(2);
     }
+
+    public function testToFormattedStringWithNoTotalCount(): void
+    {
+        $progress = new Progress();
+        $progress->incrementCounter();
+
+        $expectedString = 'progress => 1/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithTotalCount(): void
+    {
+        $progress = new Progress(totalCount: 1_000);
+        sleep(1);
+        $progress->incrementCounter();
+
+        $pattern = '/^';
+        $pattern .= 'progress => 1\/1000 \((\d{1,3}(\.\d+)?)%\)';
+        $pattern .= '; elapsed: \d{2}:\d{2}:\d{2}';
+        $pattern .= '; ete: \d{2}:\d{2}:\d{2}';
+        $pattern .= '; eta: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}';
+        $pattern .= '$/';
+        $matched = preg_match($pattern, $progress->toFormattedString());
+        $this->assertEquals(1, $matched);
+    }
 }

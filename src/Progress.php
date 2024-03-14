@@ -13,6 +13,11 @@ namespace Locr\Lib;
  */
 class Progress
 {
+    public const DEFAULT_TO_STRING_FORMAT = 'progress => ${Counter}/${TotalCount} (${PercentageCompleted}%)' .
+        '; elapsed: ${ElapsedTime}' .
+        '; ete: ${EstimatedTimeEnroute}' .
+        '; eta: ${EstimatedTimeOfArrival}';
+
     private int $counter = 0;
     /**
      * @var array<string, callable(Progress): void>
@@ -103,5 +108,20 @@ class Progress
         if (isset($this->events[ProgressEvent::Change->value])) {
             $this->events[ProgressEvent::Change->value]($this);
         }
+    }
+
+    public function toFormattedString(string $format = self::DEFAULT_TO_STRING_FORMAT): string
+    {
+        $replacements = [
+            '${Counter}' => $this->counter,
+            '${ElapsedTime}' => $this->ElapsedTime->format('%H:%I:%S'),
+            '${EstimatedTimeEnroute}' => $this->calculateEstimatedTimeEnroute()?->format('%H:%I:%S') ?? 'N/A',
+            '${EstimatedTimeOfArrival}' => $this->calculateEstimatedTimeOfArrival()?->format('Y-m-d H:i:s') ?? 'N/A',
+            '${PercentageCompleted}' => !is_null($this->PercentageCompleted) ?
+                sprintf("%.2f", $this->PercentageCompleted) : 'N/A',
+            '${TotalCount}' => $this->totalCount ?? '-',
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), $format);
     }
 }
