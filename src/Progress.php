@@ -39,9 +39,16 @@ class Progress
             return null;
         }
 
+        $totalElapsedSeconds = $this->ElapsedTime->s +
+            $this->ElapsedTime->i * 60 +
+            $this->ElapsedTime->h * 3_600 +
+            $this->ElapsedTime->d * 86_400 +
+            $this->ElapsedTime->m * 2_592_000 +
+            $this->ElapsedTime->y * 31_536_000;
+
         $hoursRemaining = 0;
         $minutesRemaining = 0;
-        $secondsRemaining = ($this->ElapsedTime->s / $this->counter * ($this->totalCount - $this->counter));
+        $secondsRemaining = ($totalElapsedSeconds / $this->counter * ($this->totalCount - $this->counter));
         if ($secondsRemaining >= 60) {
             $minutesRemaining = (int)floor($secondsRemaining / 60);
             $secondsRemaining = (int)$secondsRemaining % 60;
