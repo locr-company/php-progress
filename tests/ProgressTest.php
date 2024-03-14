@@ -24,8 +24,8 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $progress->Counter);
         $this->assertNull($progress->TotalCount);
         $this->assertNull($progress->PercentageCompleted);
-        $this->assertNull($progress->EstimatedTimeOfArrival);
-        $this->assertNull($progress->EstimatedTimeEnroute);
+        $this->assertNull($progress->calculateEstimatedTimeOfArrival());
+        $this->assertNull($progress->calculateEstimatedTimeEnroute());
     }
 
     public function testNewInstanceWithTotalCount(): void
@@ -69,21 +69,87 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress(totalCount: 1_000);
         $progress->incrementCounter();
-        $this->assertInstanceOf(\DateTimeImmutable::class, $progress->EstimatedTimeOfArrival);
         sleep(1);
-        $totalSeconds = $progress->EstimatedTimeOfArrival->getTimestamp() - $progress->StartTime->getTimestamp();
+
+        $eta = $progress->calculateEstimatedTimeOfArrival();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $eta);
+        $totalSeconds = $eta->getTimestamp() - $progress->StartTime->getTimestamp();
         $this->assertGreaterThanOrEqual(900, $totalSeconds);
         $this->assertLessThanOrEqual(1100, $totalSeconds);
     }
 
-    public function testEstimatedTimeEnroute(): void
+    public function testEstimatedTimeEnrouteIsGreaterThan0Seconds(): void
     {
         $progress = new Progress(totalCount: 1_000);
         $progress->setCounter(200);
-        $this->assertInstanceOf(\DateInterval::class, $progress->EstimatedTimeEnroute);
         sleep(1);
-        $remainingSeconds = $progress->EstimatedTimeEnroute->s;
-        $this->assertGreaterThanOrEqual(3, $remainingSeconds);
-        $this->assertLessThanOrEqual(5, $remainingSeconds);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertGreaterThanOrEqual(3, $ete->s);
+        $this->assertLessThanOrEqual(5, $ete->s);
+    }
+
+    public function testEstimatedTimeEnrouteIsLessThan60Seconds(): void
+    {
+        $progress = new Progress(totalCount: 55);
+        $progress->setCounter(1);
+        sleep(1);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertGreaterThanOrEqual(50, $ete->s);
+        $this->assertLessThanOrEqual(60, $ete->s);
+    }
+
+    public function testEstimatedTimeEnrouteEquals1Minute(): void
+    {
+        $progress = new Progress(totalCount: 90);
+        $progress->setCounter(1);
+        sleep(1);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(1, $ete->i);
+    }
+
+    public function testEstimatedTimeEnrouteIsLessThan1Hour(): void
+    {
+        $progress = new Progress(totalCount: 3_500);
+        $progress->setCounter(1);
+        sleep(1);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertLessThanOrEqual(60, $ete->i);
+        $this->assertGreaterThan(55, $ete->i);
+    }
+
+    public function testEstimatedTimeEnrouteEquals1Hour(): void
+    {
+        $progress = new Progress(totalCount: 3_700);
+        $progress->setCounter(1);
+        sleep(1);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(1, $ete->h);
+        $this->assertEquals(1, $ete->i);
     }
 }

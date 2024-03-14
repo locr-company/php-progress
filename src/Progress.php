@@ -7,8 +7,6 @@ namespace Locr\Lib;
 /**
  * @property-read int $Counter
  * @property-read \DateInterval $ElapsedTime
- * @property-read ?\DateTimeImmutable $EstimatedTimeOfArrival
- * @property-read ?\DateInterval $EstimatedTimeEnroute
  * @property-read ?float $PercentageCompleted
  * @property-read \DateTimeImmutable $StartTime
  * @property-read ?int $TotalCount
@@ -28,8 +26,6 @@ class Progress
         return match ($name) {
             'Counter' => $this->counter,
             'ElapsedTime' => (new \DateTimeImmutable())->diff($this->startTime),
-            'EstimatedTimeEnroute' => $this->calculateEstimatedTimeEnroute(),
-            'EstimatedTimeOfArrival' => $this->calculateEstimatedTimeOfArrival(),
             'PercentageCompleted' => $this->totalCount === null ? null : $this->counter / $this->totalCount * 100,
             'StartTime' => $this->startTime,
             'TotalCount' => $this->totalCount,
@@ -37,17 +33,28 @@ class Progress
         };
     }
 
-    private function calculateEstimatedTimeEnroute(): ?\DateInterval
+    public function calculateEstimatedTimeEnroute(): ?\DateInterval
     {
         if ($this->totalCount === null || $this->counter === 0) {
             return null;
         }
 
+        $hoursRemaining = 0;
+        $minutesRemaining = 0;
         $secondsRemaining = (int)($this->ElapsedTime->s / $this->counter * ($this->totalCount - $this->counter));
-        return new \DateInterval("PT{$secondsRemaining}S");
+        if ($secondsRemaining > 60) {
+            $minutesRemaining = floor($secondsRemaining / 60);
+            $secondsRemaining %= 60;
+            if ($minutesRemaining > 60) {
+                $hoursRemaining = floor($minutesRemaining / 60);
+                $minutesRemaining %= 60;
+            }
+        }
+
+        return new \DateInterval("PT{$hoursRemaining}H{$minutesRemaining}M{$secondsRemaining}S");
     }
 
-    private function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
+    public function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
     {
         if ($this->totalCount === null || $this->counter === 0) {
             return null;
