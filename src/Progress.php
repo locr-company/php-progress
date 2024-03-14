@@ -8,7 +8,7 @@ namespace Locr\Lib;
  * @property-read int $Counter
  * @property-read \DateInterval $ElapsedTime
  * @property-read ?\DateTimeImmutable $EstimatedTimeOfArrival
- * @property-read ?\DateTimeInterval $EstimatedTimeEnroute
+ * @property-read ?\DateInterval $EstimatedTimeEnroute
  * @property-read ?float $PercentageCompleted
  * @property-read \DateTimeImmutable $StartTime
  * @property-read ?int $TotalCount
