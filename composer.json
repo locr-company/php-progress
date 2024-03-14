@@ -1,0 +1,35 @@
+{
+    "name": "locr-company/progress",
+    "description": "A class for handling progress",
+    "keywords": ["progress"],
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Locr\\Lib\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ringo Leese",
+            "email": "r.leese@locr.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.9",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^11.0"
+    },
+    "scripts": {
+        "phpcs": "phpcs ./src",
+        "phpstan": "@phpstan-8.1",
+        "phpstan-8.1": "phpstan --configuration=phpstan-8.1.neon",
+        "phpstan-8.2": "phpstan --configuration=phpstan-8.2.neon",
+        "phpstan-8.3": "phpstan --configuration=phpstan-8.3.neon",
+        "test": "phpunit"
+    }
+}
