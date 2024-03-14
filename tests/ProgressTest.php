@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace UnitTests;
 
 use Locr\Lib\Progress;
+use Locr\Lib\ProgressEvent;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -151,5 +152,15 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $ete->d);
         $this->assertEquals(1, $ete->h);
         $this->assertEquals(1, $ete->i);
+    }
+
+    public function testChangeEvent(): void
+    {
+        $progress = new Progress();
+        $progress->on(ProgressEvent::Change, function (Progress $progress) {
+            $this->assertInstanceOf(Progress::class, $progress);
+        });
+
+        $progress->incrementCounter();
     }
 }

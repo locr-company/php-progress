@@ -14,6 +14,10 @@ namespace Locr\Lib;
 class Progress
 {
     private int $counter = 0;
+    /**
+     * @var array<string, callable>
+     */
+    private array $events = [];
     private \DateTimeImmutable $startTime;
 
     public function __construct(private ?int $totalCount = null)
@@ -78,6 +82,15 @@ class Progress
     public function incrementCounter(): void
     {
         $this->counter++;
+
+        if (isset($this->events[ProgressEvent::Change->value])) {
+            $this->events[ProgressEvent::Change->value]($this);
+        }
+    }
+
+    public function on(ProgressEvent $event, callable $callback): void
+    {
+        $this->events[$event->value] = $callback;
     }
 
     public function setCounter(int $counter): void
@@ -86,5 +99,9 @@ class Progress
             throw new \InvalidArgumentException('Counter must be greater than or equal to 0');
         }
         $this->counter = $counter;
+
+        if (isset($this->events[ProgressEvent::Change->value])) {
+            $this->events[ProgressEvent::Change->value]($this);
+        }
     }
 }
