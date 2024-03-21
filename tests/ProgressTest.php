@@ -159,6 +159,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress();
         $progress->on(ProgressEvent::Change, function (Progress $progress) {
             $this->assertInstanceOf(Progress::class, $progress);
+            $this->assertEquals(1, $progress->Counter);
         });
 
         $progress->incrementCounter();
@@ -169,6 +170,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress();
         $progress->on(ProgressEvent::Change, function (Progress $progress) {
             $this->assertInstanceOf(Progress::class, $progress);
+            $this->assertEquals(2, $progress->Counter);
         });
 
         $progress->setCounter(2);
