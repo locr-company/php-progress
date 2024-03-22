@@ -36,3 +36,12 @@ git clone git@github.com:locr-company/php-progress.git
 cd php-progress/.git/hooks && ln -s ../../git-hooks/* . && cd ../..
 composer install
 ```
+
+# 4. Publish a new version
+
+```bash
+# update CHANGELOG.md file
+
+git push
+git push origin --tags
+```

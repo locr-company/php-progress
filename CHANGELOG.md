@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
--  constructor signature: __construct(private ?int $totalCount = null, private ?string $locale = null, private ?ProgressUnit $unit = null)
+- constructor signature: __construct(private ?int $totalCount = null, private ?string $locale = null, private ?ProgressUnit $unit = null)
+- method signature (added $options): on(ProgressEvent $event, callable $callback, array $options = []): void
 
 ## [1.0.0] - 2024-03-14
 

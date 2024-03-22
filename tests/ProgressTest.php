@@ -196,6 +196,36 @@ final class ProgressTest extends TestCase
         $progress->setCounter(2);
     }
 
+    public function testChangeEventForIncrementCounterWithMSThresholdOption(): void
+    {
+        $eventFiredCounter = 0;
+        $progress = new Progress();
+        $progress->on(
+            ProgressEvent::Change,
+            function (Progress $_progress) use (&$eventFiredCounter) {
+                $eventFiredCounter++;
+            },
+            [
+                'update-interval-ms-threshold' => 100
+            ]
+        );
+
+        for ($i = 0; $i < 10; $i++) {
+            $progress->incrementCounter();
+        }
+
+        usleep(110_000);
+
+        $progress->incrementCounter();
+
+        /**
+         * The event should be fired 2 times:
+         * 1. When the event is fired the first time
+         * 2. When the counter is incremented after the 100 ms
+         */
+        $this->assertEquals(2, $eventFiredCounter);
+    }
+
     public function testToFormattedStringWithNoTotalCount(): void
     {
         $progress = new Progress();

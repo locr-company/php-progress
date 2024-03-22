@@ -20,7 +20,18 @@ class Progress
 
     private int $counter = 0;
     /**
-     * @var array<string, callable(Progress $progress): void>
+     * @var array<
+     *  string,
+     *  array{
+     *      'callback': callable(Progress $progress): void,
+     *      'options': array{
+     *          'update-interval-ms-threshold'?: int
+     *      },
+     *      'internal-data': array{
+     *          'last-time-event-fired'?: \DateTimeImmutable
+     *      }
+     *  }
+     * >
      */
     private array $events = [];
     private \DateTimeImmutable $startTime;
@@ -185,21 +196,29 @@ class Progress
      * ```php
      * <?php
      *
-     * use Locr\Lib\Progress;
-     * use Locr\Lib\ProgressEvent;
+     * use Locr\Lib\{Progress, ProgressEvent};
      *
      * $progress = new Progress();
-     * $progress->on(ProgressEvent::Change, function (Progress $progress) {
-     *    print $progress->Counter; // 1
-     * });
+     * $progress->on(
+     *      ProgressEvent::Change,
+     *      function (Progress $progress) {
+     *          print $progress->Counter; // 1
+     *      },
+     *      ['update-interval-ms-threshold' => 200]
+     * );
      * $progress->incrementCounter();
      * ```
      *
      * @param callable(Progress $progress): void $callback
+     * @param array{'update-interval-ms-threshold'?: int} $options
      */
-    public function on(ProgressEvent $event, callable $callback): void
+    public function on(ProgressEvent $event, callable $callback, array $options = []): void
     {
-        $this->events[$event->value] = $callback;
+        $this->events[$event->value] = [
+            'callback' => $callback,
+            'options' => $options,
+            'internal-data' => []
+        ];
     }
 
     /**
@@ -208,7 +227,25 @@ class Progress
     private function raiseEvent(ProgressEvent $event, array $args = []): void
     {
         if (isset($this->events[$event->value])) {
-            $this->events[$event->value]($this, ...$args);
+            $evt = &$this->events[$event->value];
+            $options = $evt['options'];
+            $internalData = $evt['internal-data'];
+
+            if (isset($options['update-interval-ms-threshold']) && isset($internalData['last-time-event-fired'])) {
+                $now = new \DateTimeImmutable();
+                $lastTimeEventFired = $internalData['last-time-event-fired'];
+                $interval = $now->diff($lastTimeEventFired);
+                if ($interval !== false) {
+                    $intervalMs = $interval->s * 1_000 + $interval->f * 1_000;
+                    if ($intervalMs < $options['update-interval-ms-threshold']) {
+                        return;
+                    }
+                }
+            }
+
+            $evt['internal-data']['last-time-event-fired'] = new \DateTimeImmutable();
+
+            $evt['callback']($this, ...$args);
         }
     }
 
