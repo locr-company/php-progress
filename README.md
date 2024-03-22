@@ -42,6 +42,7 @@ composer install
 ```bash
 # update CHANGELOG.md file
 
+git tag -a <major>.<minor>.<patch> -m 'version <major>.<minor>.<patch>'
 git push
 git push origin --tags
 ```
