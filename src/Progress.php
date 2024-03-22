@@ -25,6 +25,7 @@ class Progress
     private array $events = [];
     private \DateTimeImmutable $startTime;
 
+
     /**
      * the constructor
      *
@@ -37,8 +38,11 @@ class Progress
      * print $progress->TotalCount; // 1000
      * ```
      */
-    public function __construct(private ?int $totalCount = null)
-    {
+    public function __construct(
+        private ?int $totalCount = null,
+        private ?string $locale = null,
+        private ?ProgressUnit $unit = null
+    ) {
         $this->startTime = new \DateTimeImmutable();
     }
 
@@ -122,6 +126,38 @@ class Progress
 
         return (new \DateTimeImmutable())->add($ete);
     }
+    
+    private function formatValue(int $value, ?string $locale = null): string
+    {
+        $options = [];
+
+        $unitExt = '';
+        if (!is_null($this->unit) && $this->unit === ProgressUnit::Byte) {
+            $byteUnits = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+            $index = 0;
+            while ($value >= 1024 && $index < count($byteUnits) - 1) {
+                $value /= 1024;
+                $index++;
+            }
+            $options['maximumFractionDigits'] = $index === 0 ? 0 : 2;
+            $value = round($value, $options['maximumFractionDigits']);
+            $unitExt = ' ' . $byteUnits[$index];
+        }
+
+        $valueString = (string)$value;
+        if (!is_null($locale)) {
+            $numberFormatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
+            if (isset($options['maximumFractionDigits'])) {
+                $numberFormatter->setAttribute(
+                    \NumberFormatter::MAX_FRACTION_DIGITS,
+                    $options['maximumFractionDigits']
+                );
+            }
+            $valueString = $numberFormatter->format($value);
+        }
+
+        return $valueString . $unitExt;
+    }
 
     /**
      * Increment the counter and trigger the change event if it is set
@@ -140,9 +176,7 @@ class Progress
     {
         $this->counter++;
 
-        if (isset($this->events[ProgressEvent::Change->value])) {
-            $this->events[ProgressEvent::Change->value]($this);
-        }
+        $this->raiseEvent(ProgressEvent::Change);
     }
 
     /**
@@ -169,6 +203,16 @@ class Progress
     }
 
     /**
+     * @param array<mixed> $args
+     */
+    private function raiseEvent(ProgressEvent $event, array $args = []): void
+    {
+        if (isset($this->events[$event->value])) {
+            $this->events[$event->value]($this, ...$args);
+        }
+    }
+
+    /**
      * Set the counter and trigger the change event if it is set
      *
      * ```php
@@ -188,9 +232,30 @@ class Progress
         }
         $this->counter = $counter;
 
-        if (isset($this->events[ProgressEvent::Change->value])) {
-            $this->events[ProgressEvent::Change->value]($this);
+        $this->raiseEvent(ProgressEvent::Change);
+    }
+
+    /**
+     * Set the total count and trigger the change event if it is set
+     *
+     * ```php
+     * <?php
+     *
+     * use Locr\Lib\Progress;
+     *
+     * $progress = new Progress();
+     * $progress->setTotalCount(1_000);
+     * print $progress->TotalCount; // 1000
+     * ```
+     */
+    public function setTotalCount(int $totalCount): void
+    {
+        if ($totalCount < 0) {
+            throw new \InvalidArgumentException('Total count must be greater than or equal to 0');
         }
+        $this->totalCount = $totalCount;
+
+        $this->raiseEvent(ProgressEvent::Change);
     }
 
     /**
@@ -211,13 +276,13 @@ class Progress
     public function toFormattedString(string $format = self::DEFAULT_TO_STRING_FORMAT): string
     {
         $replacements = [
-            '${Counter}' => $this->counter,
+            '${Counter}' => $this->formatValue($this->counter, $this->locale),
             '${ElapsedTime}' => $this->ElapsedTime->format('%H:%I:%S'),
             '${EstimatedTimeEnroute}' => $this->calculateEstimatedTimeEnroute()?->format('%H:%I:%S') ?? 'N/A',
             '${EstimatedTimeOfArrival}' => $this->calculateEstimatedTimeOfArrival()?->format('Y-m-d H:i:s') ?? 'N/A',
             '${PercentageCompleted}' => !is_null($this->PercentageCompleted) ?
                 sprintf("%.2f", $this->PercentageCompleted) : 'N/A',
-            '${TotalCount}' => $this->totalCount ?? '-',
+            '${TotalCount}' => !is_null($this->totalCount) ? $this->formatValue($this->totalCount, $this->locale) : '-',
         ];
 
         return str_replace(array_keys($replacements), array_values($replacements), $format);

@@ -6,12 +6,15 @@ namespace UnitTests;
 
 use Locr\Lib\Progress;
 use Locr\Lib\ProgressEvent;
+use Locr\Lib\ProgressUnit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Progress::class)]
 final class ProgressTest extends TestCase
 {
+    private const TIME_PATTERN = '\d{2}:\d{2}:\d{2}';
+
     public function testNewInstance(): void
     {
         $testStartTime = new \DateTimeImmutable();
@@ -64,6 +67,23 @@ final class ProgressTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Counter must be greater than or equal to 0');
         $progress->setCounter(-1);
+    }
+
+    public function testSetTotalCount(): void
+    {
+        $progress = new Progress();
+        $this->assertNull($progress->TotalCount);
+
+        $progress->setTotalCount(1_000);
+        $this->assertEquals(1_000, $progress->TotalCount);
+    }
+
+    public function testSetInvalidTotalCount(): void
+    {
+        $progress = new Progress();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Total count must be greater than or equal to 0');
+        $progress->setTotalCount(-1);
     }
 
     public function testEstimatedTimeOfArrival(): void
@@ -185,6 +205,75 @@ final class ProgressTest extends TestCase
         $this->assertEquals($expectedString, $progress->toFormattedString());
     }
 
+    public function testToFormattedStringWithNoTotalCountAndNoLocale(): void
+    {
+        $progress = new Progress();
+        $progress->setCounter(1_000);
+
+        $expectedString = 'progress => 1000/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithNoTotalCountAndLocale(): void
+    {
+        $progress = new Progress(locale: 'de-DE');
+        $progress->setCounter(1_000);
+
+        $expectedString = 'progress => 1.000/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithNoTotalCountAndNoLocaleAndByteUnit(): void
+    {
+        $progress = new Progress(unit: ProgressUnit::Byte);
+        $progress->setCounter(1_000);
+
+        $expectedString = 'progress => 1000 B/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithNoTotalCountAndNoLocaleAndByteUnitGreaterThan1024(): void
+    {
+        $progress = new Progress(unit: ProgressUnit::Byte);
+        $progress->setCounter(2_000);
+
+        $expectedString = 'progress => 1.95 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithNoTotalCountAndLocaleAndByteUnit(): void
+    {
+        $progress = new Progress(locale: 'de-DE', unit: ProgressUnit::Byte);
+        $progress->setCounter(1_000);
+
+        $expectedString = 'progress => 1.000 B/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithNoTotalCountAndLocaleAndByteUnitWithCounterGreaterThan1024(): void
+    {
+        $progress = new Progress(locale: 'de-DE', unit: ProgressUnit::Byte);
+        $progress->setCounter(2_400);
+
+        $expectedString = 'progress => 2,34 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithTotalCountAndLocaleAndByteUnitWithTotalCountGreaterThan1024(): void
+    {
+        $progress = new Progress(totalCount: 2_000_000, locale: 'de-DE', unit: ProgressUnit::Byte);
+        $progress->setCounter(2_400);
+
+        $pattern = '/^';
+        $pattern .= 'progress => \d+,\d+ ([KMGTPEZY]i)?B\/\d+,\d+ ([KMGTPEZY]i)?B \((\d{1,3}(\.\d+)?)%\)';
+        $pattern .= '; elapsed: ' . self::TIME_PATTERN;
+        $pattern .= '; ete: ' . self::TIME_PATTERN;
+        $pattern .= '; eta: \d{4}-\d{2}-\d{2} ' . self::TIME_PATTERN;
+        $pattern .= '$/';
+        $matched = preg_match($pattern, $progress->toFormattedString());
+        $this->assertEquals(1, $matched);
+    }
+
     public function testToFormattedStringWithTotalCount(): void
     {
         $progress = new Progress(totalCount: 1_000);
@@ -193,9 +282,25 @@ final class ProgressTest extends TestCase
 
         $pattern = '/^';
         $pattern .= 'progress => 1\/1000 \((\d{1,3}(\.\d+)?)%\)';
-        $pattern .= '; elapsed: \d{2}:\d{2}:\d{2}';
-        $pattern .= '; ete: \d{2}:\d{2}:\d{2}';
-        $pattern .= '; eta: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}';
+        $pattern .= '; elapsed: ' . self::TIME_PATTERN;
+        $pattern .= '; ete: ' . self::TIME_PATTERN;
+        $pattern .= '; eta: \d{4}-\d{2}-\d{2} ' . self::TIME_PATTERN;
+        $pattern .= '$/';
+        $matched = preg_match($pattern, $progress->toFormattedString());
+        $this->assertEquals(1, $matched);
+    }
+
+    public function testToFormattedStringWithTotalCountAndLocale(): void
+    {
+        $progress = new Progress(totalCount: 1_000, locale: 'de-DE');
+        sleep(1);
+        $progress->incrementCounter();
+
+        $pattern = '/^';
+        $pattern .= 'progress => 1\/1.000 \((\d{1,3}(\.\d+)?)%\)';
+        $pattern .= '; elapsed: ' . self::TIME_PATTERN;
+        $pattern .= '; ete: ' . self::TIME_PATTERN;
+        $pattern .= '; eta: \d{4}-\d{2}-\d{2} ' . self::TIME_PATTERN;
         $pattern .= '$/';
         $matched = preg_match($pattern, $progress->toFormattedString());
         $this->assertEquals(1, $matched);
