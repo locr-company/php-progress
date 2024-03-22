@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -  constructor signature: __construct(private ?int $totalCount = null, private ?string $locale = null, private ?ProgressUnit $unit = null)
 
-## [1.0.0] - 2024-03-21
+## [1.0.0] - 2024-03-14
 
 ### Added
 
