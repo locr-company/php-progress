@@ -271,6 +271,15 @@ final class ProgressTest extends TestCase
         $this->assertEquals($expectedString, $progress->toFormattedString());
     }
 
+    public function testToFormattedStringWithNoLocaleAndByteGreaterThan1024AndEnsurePrecisionIsFixedTo2(): void
+    {
+        $progress = new Progress(unit: ProgressUnit::Byte);
+        $progress->setCounter(1_950);
+
+        $expectedString = 'progress => 1.90 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
     public function testToFormattedStringWithNoTotalCountAndLocaleAndByteUnit(): void
     {
         $progress = new Progress(locale: 'de-DE', unit: ProgressUnit::Byte);
@@ -286,6 +295,15 @@ final class ProgressTest extends TestCase
         $progress->setCounter(2_400);
 
         $expectedString = 'progress => 2,34 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
+    public function testToFormattedStringWithLocaleAndByteGreaterThan1024AndEnsurePrecisionIsFixedTo2(): void
+    {
+        $progress = new Progress(locale: 'de-DE', unit: ProgressUnit::Byte);
+        $progress->setCounter(2_360);
+
+        $expectedString = 'progress => 2,30 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
         $this->assertEquals($expectedString, $progress->toFormattedString());
     }
 

@@ -156,9 +156,18 @@ class Progress
         }
 
         $valueString = (string)$value;
+        if (isset($options['maximumFractionDigits'])) {
+            $valueString = sprintf('%.' . $options['maximumFractionDigits'] . 'f', $value);
+        }
         if (!is_null($locale)) {
             $numberFormatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
             if (isset($options['maximumFractionDigits'])) {
+                if ($options['maximumFractionDigits'] > 0) {
+                    $numberFormatter->setAttribute(
+                        \NumberFormatter::MIN_FRACTION_DIGITS,
+                        $options['maximumFractionDigits']
+                    );
+                }
                 $numberFormatter->setAttribute(
                     \NumberFormatter::MAX_FRACTION_DIGITS,
                     $options['maximumFractionDigits']
