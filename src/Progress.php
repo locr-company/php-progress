@@ -8,7 +8,7 @@ namespace Locr\Lib;
  * @property-read int $Counter
  * @property-read \DateInterval $ElapsedTime
  * @property-read ?float $PercentageCompleted
- * @property-read \DateTimeImmutable $StartTime
+ * @property-read \DateTimeInterface $StartTime
  * @property-read ?int $TotalCount
  */
 class Progress
@@ -28,13 +28,13 @@ class Progress
      *          'update-interval-ms-threshold'?: int
      *      },
      *      'internal-data': array{
-     *          'last-time-event-fired'?: \DateTimeImmutable
+     *          'last-time-event-fired'?: \DateTimeInterface
      *      }
      *  }
      * >
      */
     private array $events = [];
-    private \DateTimeImmutable $startTime;
+    private \DateTimeInterface $startTime;
 
 
     /**
@@ -54,14 +54,15 @@ class Progress
         private ?string $locale = null,
         private ?ProgressUnit $unit = null
     ) {
-        $this->startTime = new \DateTimeImmutable();
+        $this->startTime = new \DateTimeImmutable(getenv('TEST_START_TIME', true) ?: 'now');
     }
 
     public function __get(string $name): mixed
     {
+        $now = new \DateTimeImmutable(getenv('TEST_TIME_NOW', true) ?: 'now');
         return match ($name) {
             'Counter' => $this->counter,
-            'ElapsedTime' => (new \DateTimeImmutable())->diff($this->startTime),
+            'ElapsedTime' => ($now)->diff($this->startTime),
             'PercentageCompleted' => $this->totalCount === null ? null : $this->counter / $this->totalCount * 100,
             'StartTime' => $this->startTime,
             'TotalCount' => $this->totalCount,
@@ -128,14 +129,15 @@ class Progress
      * print $eta->format('Y-m-d H:i:s'); // 2021-10-10 20:00:01
      * ```
      */
-    public function calculateEstimatedTimeOfArrival(): ?\DateTimeImmutable
+    public function calculateEstimatedTimeOfArrival(): ?\DateTimeInterface
     {
         $ete = $this->calculateEstimatedTimeEnroute();
         if (is_null($ete)) {
             return null;
         }
 
-        return (new \DateTimeImmutable())->add($ete);
+        $now = new \DateTimeImmutable(getenv('TEST_TIME_NOW', true) ?: 'now');
+        return ($now)->add($ete);
     }
     
     private function formatValue(int $value, ?string $locale = null): string
@@ -240,8 +242,8 @@ class Progress
             $options = $evt['options'];
             $internalData = $evt['internal-data'];
 
+            $now = new \DateTimeImmutable(getenv('TEST_TIME_NOW', true) ?: 'now');
             if (isset($options['update-interval-ms-threshold']) && isset($internalData['last-time-event-fired'])) {
-                $now = new \DateTimeImmutable();
                 $lastTimeEventFired = $internalData['last-time-event-fired'];
                 $interval = $now->diff($lastTimeEventFired);
                 if ($interval !== false) {
@@ -252,7 +254,7 @@ class Progress
                 }
             }
 
-            $evt['internal-data']['last-time-event-fired'] = new \DateTimeImmutable();
+            $evt['internal-data']['last-time-event-fired'] = $now;
 
             $evt['callback']($this, ...$args);
         }
