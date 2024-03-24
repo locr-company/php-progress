@@ -14,6 +14,8 @@ use PHPUnit\Framework\TestCase;
 final class ProgressTest extends TestCase
 {
     private const TIME_PATTERN = '\d{2}:\d{2}:\d{2}';
+    private const TEST_TIME_1S_LATER = '2024-01-01 00:00:01.000';
+    private const TEST_TIME_NOW_ENV_VAR = 'TEST_TIME_NOW';
 
     protected function setUp(): void
     {
@@ -24,7 +26,7 @@ final class ProgressTest extends TestCase
     protected function tearDown(): void
     {
         putenv('TEST_START_TIME=');
-        putenv('TEST_TIME_NOW=');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=');
     }
 
     public function testNewInstance(): void
@@ -103,7 +105,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 1_000);
         $progress->incrementCounter();
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $eta = $progress->calculateEstimatedTimeOfArrival();
         $this->assertInstanceOf(\DateTimeInterface::class, $eta);
@@ -117,7 +119,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 1_000);
         $progress->setCounter(200);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -130,7 +132,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 55);
         $progress->setCounter(1);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -148,7 +150,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 90);
         $progress->setCounter(1);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -164,7 +166,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 3_500);
         $progress->setCounter(1);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -181,7 +183,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 3_700);
         $progress->setCounter(1);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -220,7 +222,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress();
         $progress->on(
             ProgressEvent::Change,
-            function (Progress $_progress) use (&$eventFiredCounter) {
+            function () use (&$eventFiredCounter) {
                 $eventFiredCounter++;
             },
             [
@@ -344,7 +346,7 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress(totalCount: 1_000);
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $progress->incrementCounter();
 
@@ -362,7 +364,7 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress(totalCount: 1_000, locale: 'de-DE');
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.000');
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
 
         $progress->incrementCounter();
 
