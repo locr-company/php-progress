@@ -44,6 +44,8 @@ final class ProgressTest extends TestCase
         $this->assertNull($progress->PercentageCompleted);
         $this->assertNull($progress->calculateEstimatedTimeOfArrival());
         $this->assertNull($progress->calculateEstimatedTimeEnroute());
+
+        $this->assertNull($progress->Null);
     }
 
     public function testNewInstanceWithTotalCount(): void

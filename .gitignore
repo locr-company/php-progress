@@ -1,3 +1,6 @@
 .phpunit.cache/
 test-results/
 vendor/
+
+infection.html
+infection.log

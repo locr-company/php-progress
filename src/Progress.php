@@ -7,17 +7,27 @@ namespace Locr\Lib;
 /**
  * @property-read int $Counter
  * @property-read \DateInterval $ElapsedTime
+ * @property-read null $Null
  * @property-read ?float $PercentageCompleted
  * @property-read \DateTimeInterface $StartTime
  * @property-read ?int $TotalCount
  */
 class Progress
 {
+    private const SECONDS_PER_MINUTE = 60;
+    private const SECONDS_PER_HOUR = 3_600;
+    private const SECONDS_PER_DAY = 86_400;
+    private const SECONDS_PER_MONTH = 2_592_000;
+    private const SECONDS_PER_YEAR = 31_536_000;
+
     public const DEFAULT_TO_STRING_FORMAT = 'progress => ${Counter}/${TotalCount} (${PercentageCompleted}%)' .
         '; elapsed: ${ElapsedTime}' .
         '; ete: ${EstimatedTimeEnroute}' .
         '; eta: ${EstimatedTimeOfArrival}';
 
+    /**
+     * @var int<0, max> $counter
+     */
     private int $counter = 0;
     /**
      * @var array<
@@ -66,7 +76,7 @@ class Progress
             'PercentageCompleted' => $this->totalCount === null ? null : $this->counter / $this->totalCount * 100,
             'StartTime' => $this->startTime,
             'TotalCount' => $this->totalCount,
-            default => throw new \InvalidArgumentException("Property $name does not exist")
+            default => null
         };
     }
 
@@ -91,24 +101,24 @@ class Progress
         }
 
         $totalElapsedSeconds = $this->ElapsedTime->s +
-            $this->ElapsedTime->i * 60 +
-            $this->ElapsedTime->h * 3_600 +
-            $this->ElapsedTime->d * 86_400 +
-            $this->ElapsedTime->m * 2_592_000 +
-            $this->ElapsedTime->y * 31_536_000;
+            $this->ElapsedTime->i * self::SECONDS_PER_MINUTE +
+            $this->ElapsedTime->h * self::SECONDS_PER_HOUR +
+            $this->ElapsedTime->d * self::SECONDS_PER_DAY +
+            $this->ElapsedTime->m * self::SECONDS_PER_MONTH +
+            $this->ElapsedTime->y * self::SECONDS_PER_YEAR;
 
         $hoursRemaining = 0;
         $minutesRemaining = 0;
         $secondsRemaining = ($totalElapsedSeconds / $this->counter * ($this->totalCount - $this->counter));
         if ($secondsRemaining >= 60) {
-            $minutesRemaining = (int)floor($secondsRemaining / 60);
-            $secondsRemaining = (int)$secondsRemaining % 60;
+            $minutesRemaining = intval(floor($secondsRemaining / 60));
+            $secondsRemaining = intval($secondsRemaining) % 60;
             if ($minutesRemaining >= 60) {
-                $hoursRemaining = (int)floor($minutesRemaining / 60);
-                $minutesRemaining = (int)$minutesRemaining % 60;
+                $hoursRemaining = intval(floor($minutesRemaining / 60));
+                $minutesRemaining = intval($minutesRemaining) % 60;
             }
         }
-        $secondsRemaining = (int)$secondsRemaining;
+        $secondsRemaining = intval($secondsRemaining);
 
         return new \DateInterval("PT{$hoursRemaining}H{$minutesRemaining}M{$secondsRemaining}S");
     }
@@ -157,7 +167,7 @@ class Progress
             $unitExt = ' ' . $byteUnits[$index];
         }
 
-        $valueString = (string)$value;
+        $valueString = number_format($value, 0, '.', '');
         if (isset($options['maximumFractionDigits'])) {
             $valueString = sprintf('%.' . $options['maximumFractionDigits'] . 'f', $value);
         }
@@ -333,6 +343,6 @@ class Progress
             '${TotalCount}' => !is_null($this->totalCount) ? $this->formatValue($this->totalCount, $this->locale) : '-',
         ];
 
-        return str_replace(array_keys($replacements), array_values($replacements), $format);
+        return str_replace(array_keys($replacements), $replacements, $format);
     }
 }
