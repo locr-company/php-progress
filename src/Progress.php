@@ -18,7 +18,7 @@ class Progress
     private const SECONDS_PER_MINUTE = 60;
     private const SECONDS_PER_HOUR = 3_600;
     private const SECONDS_PER_DAY = 86_400;
-    private const SECONDS_PER_MONTH = 2_592_000;
+    //private const SECONDS_PER_MONTH = 2_592_000;
     private const SECONDS_PER_YEAR = 31_536_000;
     private const MINUTES_PER_HOUR = 60;
     private const HOURS_PER_DAY = 24;
@@ -113,7 +113,7 @@ class Progress
             $this->ElapsedTime->i * self::SECONDS_PER_MINUTE +
             $this->ElapsedTime->h * self::SECONDS_PER_HOUR +
             $this->ElapsedTime->d * self::SECONDS_PER_DAY +
-            $this->ElapsedTime->m * self::SECONDS_PER_MONTH +
+            //$this->ElapsedTime->m * self::SECONDS_PER_MONTH +
             $this->ElapsedTime->y * self::SECONDS_PER_YEAR;
 
         $yearsRemaining = 0;
