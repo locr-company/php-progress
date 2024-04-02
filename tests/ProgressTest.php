@@ -14,7 +14,11 @@ use PHPUnit\Framework\TestCase;
 final class ProgressTest extends TestCase
 {
     private const TIME_PATTERN = '\d{2}:\d{2}:\d{2}';
-    private const TEST_TIME_1S_LATER = '2024-01-01 00:00:01.000';
+    private const TEST_TIME_1SEC_LATER = '2024-01-01 00:00:01.000';
+    private const TEST_TIME_1MIN_LATER = '2024-01-01 00:01:00.000';
+    private const TEST_TIME_1HOUR_LATER = '2024-01-01 01:00:00.000';
+    private const TEST_TIME_1DAY_LATER = '2024-01-02 00:00:00.000';
+    private const TEST_TIME_1YEAR_LATER = '2025-01-01 00:00:00.000';
     private const TEST_TIME_NOW_ENV_VAR = 'TEST_TIME_NOW';
 
     protected function setUp(): void
@@ -75,6 +79,10 @@ final class ProgressTest extends TestCase
         $progress->setCounter(500);
         $this->assertEquals(500, $progress->Counter);
         $this->assertEquals(50, $progress->PercentageCompleted);
+
+        $progress->setCounter(0);
+        $this->assertEquals(0, $progress->Counter);
+        $this->assertEquals(0, $progress->PercentageCompleted);
     }
 
     public function testSetInvalidCounter(): void
@@ -89,6 +97,9 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress();
         $this->assertNull($progress->TotalCount);
+
+        $progress->setTotalCount(0);
+        $this->assertEquals(0, $progress->TotalCount);
 
         $progress->setTotalCount(1_000);
         $this->assertEquals(1_000, $progress->TotalCount);
@@ -107,7 +118,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 1_000);
         $progress->incrementCounter();
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $eta = $progress->calculateEstimatedTimeOfArrival();
         $this->assertInstanceOf(\DateTimeInterface::class, $eta);
@@ -121,12 +132,17 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 1_000);
         $progress->setCounter(200);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
-        $this->assertGreaterThanOrEqual(3, $ete->s);
-        $this->assertLessThanOrEqual(5, $ete->s);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(4, $ete->s);
+        $this->assertEquals(0, $ete->f);
     }
 
     public function testEstimatedTimeEnrouteIsLessThan60Seconds(): void
@@ -134,7 +150,7 @@ final class ProgressTest extends TestCase
         $progress = new Progress(totalCount: 55);
         $progress->setCounter(1);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -149,10 +165,10 @@ final class ProgressTest extends TestCase
 
     public function testEstimatedTimeEnrouteEquals1Minute(): void
     {
-        $progress = new Progress(totalCount: 90);
+        $progress = new Progress(totalCount: 61);
         $progress->setCounter(1);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -161,14 +177,15 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $ete->d);
         $this->assertEquals(0, $ete->h);
         $this->assertEquals(1, $ete->i);
+        $this->assertEquals(0, $ete->s);
     }
 
     public function testEstimatedTimeEnrouteIsLessThan1Hour(): void
     {
-        $progress = new Progress(totalCount: 3_500);
+        $progress = new Progress(totalCount: 3_541);
         $progress->setCounter(1);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -176,16 +193,16 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $ete->m);
         $this->assertEquals(0, $ete->d);
         $this->assertEquals(0, $ete->h);
-        $this->assertLessThanOrEqual(60, $ete->i);
-        $this->assertGreaterThan(55, $ete->i);
+        $this->assertEquals(59, $ete->i);
+        $this->assertEquals(0, $ete->s);
     }
 
     public function testEstimatedTimeEnrouteEquals1Hour(): void
     {
-        $progress = new Progress(totalCount: 3_700);
+        $progress = new Progress(totalCount: 3_601);
         $progress->setCounter(1);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $ete = $progress->calculateEstimatedTimeEnroute();
         $this->assertInstanceOf(\DateInterval::class, $ete);
@@ -193,8 +210,78 @@ final class ProgressTest extends TestCase
         $this->assertEquals(0, $ete->m);
         $this->assertEquals(0, $ete->d);
         $this->assertEquals(1, $ete->h);
-        $this->assertEquals(1, $ete->i);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(0, $ete->s);
     }
+
+    public function testEstimatedTimeEnrouteEquals1HourWhereTimeIs1MinLater(): void
+    {
+        $progress = new Progress(totalCount: 61);
+        $progress->setCounter(1);
+
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1MIN_LATER);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(1, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(0, $ete->s);
+    }
+
+    public function testEstimatedTimeEnrouteEquals1DayWhereTimeIs1HourLater(): void
+    {
+        $progress = new Progress(totalCount: 25);
+        $progress->setCounter(1);
+
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1HOUR_LATER);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(0, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(1, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(0, $ete->s);
+    }
+
+    public function testEstimatedTimeEnrouteEquals1YearWhereTimeIs1DayLater(): void
+    {
+        $progress = new Progress(totalCount: 366);
+        $progress->setCounter(1);
+
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1DAY_LATER);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(1, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(0, $ete->s);
+    }
+
+    public function testEstimatedTimeEnrouteEquals1YearWhereTimeIs1YearLater(): void
+    {
+        $progress = new Progress(totalCount: 2);
+        $progress->setCounter(1);
+
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1YEAR_LATER);
+
+        $ete = $progress->calculateEstimatedTimeEnroute();
+        $this->assertInstanceOf(\DateInterval::class, $ete);
+        $this->assertEquals(1, $ete->y);
+        $this->assertEquals(0, $ete->m);
+        $this->assertEquals(0, $ete->d);
+        $this->assertEquals(0, $ete->h);
+        $this->assertEquals(0, $ete->i);
+        $this->assertEquals(0, $ete->s);
+    }
+
 
     public function testChangeEventForIncrementCounter(): void
     {
@@ -216,6 +303,17 @@ final class ProgressTest extends TestCase
         });
 
         $progress->setCounter(2);
+    }
+
+    public function testChangeEventForSetTotalCount(): void
+    {
+        $progress = new Progress();
+        $progress->on(ProgressEvent::Change, function (Progress $progress) {
+            $this->assertInstanceOf(Progress::class, $progress);
+            $this->assertEquals(5, $progress->TotalCount);
+        });
+
+        $progress->setTotalCount(5);
     }
 
     public function testChangeEventForIncrementCounterWithMSThresholdOption(): void
@@ -348,7 +446,7 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress(totalCount: 1_000);
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $progress->incrementCounter();
 
@@ -366,7 +464,7 @@ final class ProgressTest extends TestCase
     {
         $progress = new Progress(totalCount: 1_000, locale: 'de-DE');
 
-        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1S_LATER);
+        putenv(self::TEST_TIME_NOW_ENV_VAR . '=' . self::TEST_TIME_1SEC_LATER);
 
         $progress->incrementCounter();
 

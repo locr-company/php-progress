@@ -14,11 +14,20 @@ namespace Locr\Lib;
  */
 class Progress
 {
+    private const MILLISECONDS_PER_SECOND = 1_000;
     private const SECONDS_PER_MINUTE = 60;
     private const SECONDS_PER_HOUR = 3_600;
     private const SECONDS_PER_DAY = 86_400;
     private const SECONDS_PER_MONTH = 2_592_000;
     private const SECONDS_PER_YEAR = 31_536_000;
+    private const MINUTES_PER_HOUR = 60;
+    private const HOURS_PER_DAY = 24;
+    private const DAYS_PER_YEAR = 365;
+
+    private const BINARY_MULTIPLIER = 1_024;
+
+    private const ZERO = 0;
+    private const ZERO_DECIMALS = 0;
 
     public const DEFAULT_TO_STRING_FORMAT = 'progress => ${Counter}/${TotalCount} (${PercentageCompleted}%)' .
         '; elapsed: ${ElapsedTime}' .
@@ -107,20 +116,32 @@ class Progress
             $this->ElapsedTime->m * self::SECONDS_PER_MONTH +
             $this->ElapsedTime->y * self::SECONDS_PER_YEAR;
 
+        $yearsRemaining = 0;
+        $daysRemaining = 0;
         $hoursRemaining = 0;
         $minutesRemaining = 0;
         $secondsRemaining = ($totalElapsedSeconds / $this->counter * ($this->totalCount - $this->counter));
-        if ($secondsRemaining >= 60) {
-            $minutesRemaining = intval(floor($secondsRemaining / 60));
-            $secondsRemaining = intval($secondsRemaining) % 60;
-            if ($minutesRemaining >= 60) {
-                $hoursRemaining = intval(floor($minutesRemaining / 60));
-                $minutesRemaining = intval($minutesRemaining) % 60;
-            }
+        if ($secondsRemaining >= self::SECONDS_PER_MINUTE) {
+            $minutesRemaining = intval(floor($secondsRemaining / self::SECONDS_PER_MINUTE));
+            $secondsRemaining = intval($secondsRemaining) % self::SECONDS_PER_MINUTE;
+        }
+        if ($minutesRemaining >= self::MINUTES_PER_HOUR) {
+            $hoursRemaining = intval(floor($minutesRemaining / self::MINUTES_PER_HOUR));
+            $minutesRemaining = intval($minutesRemaining) % self::MINUTES_PER_HOUR;
+        }
+        if ($hoursRemaining >= self::HOURS_PER_DAY) {
+            $daysRemaining = intval(floor($hoursRemaining / self::HOURS_PER_DAY));
+            $hoursRemaining = intval($hoursRemaining) % self::HOURS_PER_DAY;
+        }
+        if ($daysRemaining >= self::DAYS_PER_YEAR) {
+            $yearsRemaining = intval(floor($daysRemaining / self::DAYS_PER_YEAR));
+            $daysRemaining = intval($daysRemaining) % self::DAYS_PER_YEAR;
         }
         $secondsRemaining = intval($secondsRemaining);
 
-        return new \DateInterval("PT{$hoursRemaining}H{$minutesRemaining}M{$secondsRemaining}S");
+        return new \DateInterval(
+            "P{$yearsRemaining}Y{$daysRemaining}DT{$hoursRemaining}H{$minutesRemaining}M{$secondsRemaining}S"
+        );
     }
 
     /**
@@ -158,8 +179,8 @@ class Progress
         if (!is_null($this->unit) && $this->unit === ProgressUnit::Byte) {
             $byteUnits = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
             $index = 0;
-            while ($value >= 1024 && $index < count($byteUnits) - 1) {
-                $value /= 1024;
+            while ($value >= self::BINARY_MULTIPLIER && $index < count($byteUnits) - 1) {
+                $value /= self::BINARY_MULTIPLIER;
                 $index++;
             }
             $options['maximumFractionDigits'] = $index === 0 ? 0 : 2;
@@ -167,7 +188,7 @@ class Progress
             $unitExt = ' ' . $byteUnits[$index];
         }
 
-        $valueString = number_format($value, 0, '.', '');
+        $valueString = number_format($value, self::ZERO_DECIMALS, '.', '');
         if (isset($options['maximumFractionDigits'])) {
             $valueString = sprintf('%.' . $options['maximumFractionDigits'] . 'f', $value);
         }
@@ -257,7 +278,8 @@ class Progress
                 $lastTimeEventFired = $internalData['last-time-event-fired'];
                 $interval = $now->diff($lastTimeEventFired);
                 if ($interval !== false) {
-                    $intervalMs = $interval->s * 1_000 + $interval->f * 1_000;
+                    $intervalMs = $interval->s * self::MILLISECONDS_PER_SECOND +
+                        $interval->f * self::MILLISECONDS_PER_SECOND;
                     if ($intervalMs < $options['update-interval-ms-threshold']) {
                         return;
                     }
@@ -285,8 +307,8 @@ class Progress
      */
     public function setCounter(int $counter): void
     {
-        if ($counter < 0) {
-            throw new \InvalidArgumentException('Counter must be greater than or equal to 0');
+        if ($counter < self::ZERO) {
+            throw new \InvalidArgumentException('Counter must be greater than or equal to ' . self::ZERO);
         }
         $this->counter = $counter;
 
@@ -308,8 +330,8 @@ class Progress
      */
     public function setTotalCount(int $totalCount): void
     {
-        if ($totalCount < 0) {
-            throw new \InvalidArgumentException('Total count must be greater than or equal to 0');
+        if ($totalCount < self::ZERO) {
+            throw new \InvalidArgumentException('Total count must be greater than or equal to ' . self::ZERO);
         }
         $this->totalCount = $totalCount;
 
