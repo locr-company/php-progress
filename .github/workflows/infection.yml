@@ -39,4 +39,4 @@ jobs:
         coverage: pcov
 
     - name: Run Infection
-      run: ./infection.phar
+      run: STRYKER_DASHBOARD_API_KEY=${{ secrets.STRYKER_DASHBOARD_API_KEY }} ./infection.phar
