@@ -5,11 +5,11 @@
   bootstrap="vendor/autoload.php"
   colors="true"
   executionOrder="depends,defects"
-  beStrictAboutOutputDuringTests="true"
   failOnRisky="true"
   failOnWarning="true"
   cacheDirectory=".phpunit.cache"
   requireCoverageMetadata="true"
+  beStrictAboutOutputDuringTests="true"
   beStrictAboutCoverageMetadata="true">
   <testsuites>
     <testsuite name="default">

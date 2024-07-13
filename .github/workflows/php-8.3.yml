@@ -41,8 +41,8 @@ jobs:
         php-version: '8.3'
         coverage: pcov
 
-    - name: Run CodeSniffer (phpcs)
-      run: composer run-script dev:lint:phpcs
+    - name: Run Linter
+      run: composer run-script dev:lint
 
     - name: Run Static Analyzer (phpstan)
       run: composer run-script dev:analyze:phpstan-8.3

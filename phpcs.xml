@@ -13,4 +13,10 @@
     <rule ref="PSR2.ControlStructures.SwitchDeclaration"/>
     <rule ref="PSR12"/>
     <rule ref="Squiz.NamingConventions.ValidVariableName.NotCamelCaps"/>
+    <rule ref="Generic.PHP.RequireStrictTypes"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UseFromSameNamespace"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
 </ruleset>

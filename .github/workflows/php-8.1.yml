@@ -41,13 +41,13 @@ jobs:
         php-version: '8.1'
         coverage: pcov
 
-    - name: Run CodeSniffer (phpcs)
-      run: composer run-script dev:lint:phpcs
+    - name: Run Linter
+      run: composer run-script dev:lint
 
     - name: Run Static Analyzer (phpstan)
       run: composer run-script dev:analyze:phpstan-8.1
 
-    - name: Run Unit Tests (phpunit)
+    - name: Run Unit Tests with CodeCoverage (phpunit)
       run: composer run-script dev:test:coverage:ci
 
     - name: Upload coverage reports to Codecov
