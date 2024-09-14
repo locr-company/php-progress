@@ -120,19 +120,19 @@ class Progress
         $minutesRemaining = 0;
         $secondsRemaining = ($totalElapsedSeconds / $this->counter * ($this->totalCount - $this->counter));
         if ($secondsRemaining >= self::SECONDS_PER_MINUTE) {
-            $minutesRemaining = intval(floor($secondsRemaining / self::SECONDS_PER_MINUTE));
+            $minutesRemaining = intval($secondsRemaining / self::SECONDS_PER_MINUTE);
             $secondsRemaining = intval($secondsRemaining) % self::SECONDS_PER_MINUTE;
         }
         if ($minutesRemaining >= self::MINUTES_PER_HOUR) {
-            $hoursRemaining = intval(floor($minutesRemaining / self::MINUTES_PER_HOUR));
+            $hoursRemaining = intval($minutesRemaining / self::MINUTES_PER_HOUR);
             $minutesRemaining = intval($minutesRemaining) % self::MINUTES_PER_HOUR;
         }
         if ($hoursRemaining >= self::HOURS_PER_DAY) {
-            $daysRemaining = intval(floor($hoursRemaining / self::HOURS_PER_DAY));
+            $daysRemaining = intval($hoursRemaining / self::HOURS_PER_DAY);
             $hoursRemaining = intval($hoursRemaining) % self::HOURS_PER_DAY;
         }
         if ($daysRemaining >= self::DAYS_PER_YEAR) {
-            $yearsRemaining = intval(floor($daysRemaining / self::DAYS_PER_YEAR));
+            $yearsRemaining = intval($daysRemaining / self::DAYS_PER_YEAR);
             $daysRemaining = intval($daysRemaining) % self::DAYS_PER_YEAR;
         }
         $secondsRemaining = intval($secondsRemaining);
