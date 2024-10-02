@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace UnitTests;
 
-use Locr\Lib\Progress;
-use Locr\Lib\ProgressEvent;
-use Locr\Lib\ProgressUnit;
+use Locr\Lib\{Progress, ProgressEvent, ProgressUnit};
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -382,6 +380,15 @@ final class ProgressTest extends TestCase
         $this->assertEquals($expectedString, $progress->toFormattedString());
     }
 
+    public function testToFormattedStringWithNoTotalCountAndNoLocaleAndByteUnitIsEqualTo1024(): void
+    {
+        $progress = new Progress(unit: ProgressUnit::Byte);
+        $progress->setCounter(1_024);
+
+        $expectedString = 'progress => 1.00 KiB/- (N/A%); elapsed: 00:00:00; ete: N/A; eta: N/A';
+        $this->assertEquals($expectedString, $progress->toFormattedString());
+    }
+
     public function testToFormattedStringWithNoTotalCountAndNoLocaleAndByteUnitGreaterThan1024(): void
     {
         $progress = new Progress(unit: ProgressUnit::Byte);
@@ -440,6 +447,7 @@ final class ProgressTest extends TestCase
         $pattern .= '$/';
         $matched = preg_match($pattern, $progress->toFormattedString());
         $this->assertEquals(1, $matched);
+        $this->assertStringContainsString('progress => 2,34 KiB/1,91 MiB (0.12%);', $progress->toFormattedString());
     }
 
     public function testToFormattedStringWithTotalCount(): void
