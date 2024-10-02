@@ -168,18 +168,20 @@ class Progress
         $now = new \DateTimeImmutable(getenv('TEST_TIME_NOW', true) ?: 'now');
         return ($now)->add($ete);
     }
-    
+
     private function formatValue(int $value, ?string $locale = null): string
     {
         $options = [];
 
         $unitExt = '';
-        if (!is_null($this->unit) && $this->unit === ProgressUnit::Byte) {
+        if ($this->unit === ProgressUnit::Byte) {
             $byteUnits = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
             $index = 0;
-            while ($value >= self::BINARY_MULTIPLIER && $index < count($byteUnits) - 1) {
-                $value /= self::BINARY_MULTIPLIER;
-                $index++;
+            foreach ($byteUnits as $byteUnit) {
+                if ($value >= self::BINARY_MULTIPLIER) {
+                    $value /= self::BINARY_MULTIPLIER;
+                    $index++;
+                }
             }
             $options['maximumFractionDigits'] = $index === 0 ? 0 : 2;
             $value = round($value, $options['maximumFractionDigits']);
@@ -275,12 +277,10 @@ class Progress
             if (isset($options['update-interval-ms-threshold']) && isset($internalData['last-time-event-fired'])) {
                 $lastTimeEventFired = $internalData['last-time-event-fired'];
                 $interval = $now->diff($lastTimeEventFired);
-                if ($interval !== false) {
-                    $intervalMs = $interval->s * self::MILLISECONDS_PER_SECOND +
-                        $interval->f * self::MILLISECONDS_PER_SECOND;
-                    if ($intervalMs < $options['update-interval-ms-threshold']) {
-                        return;
-                    }
+                $intervalMs = $interval->s * self::MILLISECONDS_PER_SECOND +
+                    $interval->f * self::MILLISECONDS_PER_SECOND;
+                if ($intervalMs < $options['update-interval-ms-threshold']) {
+                    return;
                 }
             }
 
