@@ -38,11 +38,8 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
-    
     - name: Setup PHP with PCOV
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 #v2.32.0
       with:
         php-version: ${{ matrix.version }}
         coverage: pcov
@@ -58,7 +55,7 @@ jobs:
       if: matrix.version == '8.1'
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 #v5.1.2
       if: matrix.version == '8.1'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
