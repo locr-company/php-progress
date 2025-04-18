@@ -35,7 +35,7 @@ jobs:
     - name: Setup PHP with PCOV
       uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 #v2.32.0
       with:
-        php-version: '8.1'
+        php-version: '8.4'
         coverage: pcov
 
     - name: Run Infection
