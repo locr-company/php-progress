@@ -25,6 +25,8 @@ class Progress
 
     private const BINARY_MULTIPLIER = 1_024;
 
+    private const FIXED_FRACTION_DIGITS = 2;
+
     private const ZERO = 0;
     private const ZERO_DECIMALS = 0;
 
@@ -104,7 +106,7 @@ class Progress
      */
     public function calculateEstimatedTimeEnroute(): ?\DateInterval
     {
-        if ($this->totalCount === null || $this->counter === 0) {
+        if (is_null($this->totalCount) || $this->counter === 0) {
             return null;
         }
 
@@ -183,27 +185,22 @@ class Progress
                     $index++;
                 }
             }
-            $options['maximumFractionDigits'] = $index === 0 ? 0 : 2;
-            $value = round($value, $options['maximumFractionDigits']);
+            $options['maxFractionDigits'] = $index === 0 ? 0 : self::FIXED_FRACTION_DIGITS;
+            $value = round($value, $options['maxFractionDigits']);
             $unitExt = ' ' . $byteUnits[$index];
         }
 
         $valueString = number_format($value, self::ZERO_DECIMALS, '.', '');
-        if (isset($options['maximumFractionDigits'])) {
-            $valueString = sprintf('%.' . $options['maximumFractionDigits'] . 'f', $value);
+        if (isset($options['maxFractionDigits'])) {
+            $valueString = sprintf('%.' . $options['maxFractionDigits'] . 'f', $value);
         }
         if (!is_null($locale)) {
             $numberFormatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
-            if (isset($options['maximumFractionDigits'])) {
-                if ($options['maximumFractionDigits'] > 0) {
-                    $numberFormatter->setAttribute(
-                        \NumberFormatter::MIN_FRACTION_DIGITS,
-                        $options['maximumFractionDigits']
-                    );
-                }
+            if (isset($options['maxFractionDigits']) && $options['maxFractionDigits'] === self::FIXED_FRACTION_DIGITS) {
+                // set to fixed fraction digits!
                 $numberFormatter->setAttribute(
-                    \NumberFormatter::MAX_FRACTION_DIGITS,
-                    $options['maximumFractionDigits']
+                    \NumberFormatter::MIN_FRACTION_DIGITS,
+                    $options['maxFractionDigits']
                 );
             }
             $valueString = $numberFormatter->format($value);
@@ -277,7 +274,8 @@ class Progress
             if (isset($options['update-interval-ms-threshold']) && isset($internalData['last-time-event-fired'])) {
                 $lastTimeEventFired = $internalData['last-time-event-fired'];
                 $interval = $now->diff($lastTimeEventFired);
-                $intervalMs = $interval->s * self::MILLISECONDS_PER_SECOND +
+                $intervalMs =
+                    $interval->s * self::MILLISECONDS_PER_SECOND +
                     $interval->f * self::MILLISECONDS_PER_SECOND;
                 if ($intervalMs < $options['update-interval-ms-threshold']) {
                     return;

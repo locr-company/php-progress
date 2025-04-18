@@ -284,7 +284,7 @@ final class ProgressTest extends TestCase
     public function testChangeEventForIncrementCounter(): void
     {
         $progress = new Progress();
-        $progress->on(ProgressEvent::Change, function (Progress $progress) {
+        $progress->on(ProgressEvent::Change, function (Progress $progress): void {
             $this->assertInstanceOf(Progress::class, $progress);
             $this->assertEquals(1, $progress->Counter);
         });
@@ -295,7 +295,7 @@ final class ProgressTest extends TestCase
     public function testChangeEventForSetCounter(): void
     {
         $progress = new Progress();
-        $progress->on(ProgressEvent::Change, function (Progress $progress) {
+        $progress->on(ProgressEvent::Change, function (Progress $progress): void {
             $this->assertInstanceOf(Progress::class, $progress);
             $this->assertEquals(2, $progress->Counter);
         });
@@ -306,7 +306,7 @@ final class ProgressTest extends TestCase
     public function testChangeEventForSetTotalCount(): void
     {
         $progress = new Progress();
-        $progress->on(ProgressEvent::Change, function (Progress $progress) {
+        $progress->on(ProgressEvent::Change, function (Progress $progress): void {
             $this->assertInstanceOf(Progress::class, $progress);
             $this->assertEquals(5, $progress->TotalCount);
         });
@@ -320,11 +320,11 @@ final class ProgressTest extends TestCase
         $progress = new Progress();
         $progress->on(
             ProgressEvent::Change,
-            function () use (&$eventFiredCounter) {
+            function () use (&$eventFiredCounter): void {
                 $eventFiredCounter++;
             },
             [
-                'update-interval-ms-threshold' => 100
+                'update-interval-ms-threshold' => 1100
             ]
         );
 
@@ -332,7 +332,7 @@ final class ProgressTest extends TestCase
             $progress->incrementCounter();
         }
 
-        putenv('TEST_TIME_NOW=2024-01-01 00:00:00.110');
+        putenv('TEST_TIME_NOW=2024-01-01 00:00:01.101');
 
         $progress->incrementCounter();
 

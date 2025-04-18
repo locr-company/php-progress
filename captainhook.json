@@ -24,7 +24,16 @@
                 }
             },
             {
-                "action": "composer test"
+                "action": "composer dev:lint:php"
+            },
+            {
+                "action": "composer dev:lint:phpcs"
+            },
+            {
+                "action": "composer dev:analyze:phpstan"
+            },
+            {
+                "action": "composer dev:test:unit"
             }
         ]
     },
